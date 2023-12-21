@@ -28,6 +28,7 @@ async function run() {
 
       const database =  client.db("rahmani_noor");
       const productCollection =  database.collection('products');
+      const addressCollection = database.collection("customer_address");
       app.get("/", (req, res) => {
         res.send("server is running ");
       });
@@ -35,6 +36,16 @@ async function run() {
           const products = await productCollection.find().toArray();
           res.send(products)
       })
+
+    app.post("/customer/profile/address", async (req, res) => {
+      const reqBody = req.body;
+      const result = await addressCollection.insertOne(reqBody);
+      res.send(result);
+    });
+    app.get("/customer/profile/address", async (req, res) => { 
+      const address = await addressCollection.find().toArray();
+      res.send(address);
+    });
     
   } finally {
     // Ensures that the client will close when you finish/error
