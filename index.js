@@ -39,7 +39,7 @@ async function run() {
           res.send(products)
       })
     
-    app.get("/customer/checkout", (req, res) => {
+    app.post("/customer/checkout", (req, res) => {
       const data = {
         total_amount: 100,
         currency: "BDT",
