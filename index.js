@@ -74,7 +74,7 @@ async function run() {
       sslcz.init(data).then((apiResponse) => {
         // Redirect the user to payment gateway
         let GatewayPageURL = apiResponse.GatewayPageURL;
-        res.redirect(GatewayPageURL);
+        res.redirect({ url: GatewayPageURL });
         console.log("Redirecting to: ", GatewayPageURL);
       });
     });
