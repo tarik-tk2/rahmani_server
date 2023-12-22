@@ -79,15 +79,16 @@ async function run() {
       });
     });
 
-    app.post("/customer/profile/address/", async (req, res) => {
+    app.post("/customer/profile/address", async (req, res) => {
       const reqBody = req.body;
       const result = await addressCollection.insertOne(reqBody);
       res.send(result);
     });
-    app.put("/customer/profile/address/:id", async (req, res) => {
+    app.put("/customer/profile/address", async (req, res) => {
       const getId = req.params.id;
       const options = { upsert: true };
       const filter = { _id: getId }
+      console.log(getId)
       const updateDoc = req.body;
       const result = await addressCollection.updateOne(filter, updateDoc, options);
       res.send(result);
