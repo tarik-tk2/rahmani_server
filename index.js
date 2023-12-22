@@ -74,7 +74,7 @@ async function run() {
       sslcz.init(data).then((apiResponse) => {
         // Redirect the user to payment gateway
         let GatewayPageURL = apiResponse.GatewayPageURL;
-        res.redirect({ url: GatewayPageURL });
+        res.send({ url: GatewayPageURL });
         console.log("Redirecting to: ", GatewayPageURL);
       });
     });
@@ -84,8 +84,17 @@ async function run() {
       const result = await addressCollection.insertOne(reqBody);
       res.send(result);
     });
+    app.put("/customer/profile/address/:id", async (req, res) => {
+      const getId = req.params.id;
+      const options = { upsert: true };
+      const filter = { _id: getId }
+      const updateDoc = req.body;
+      const result = await addressCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
     app.get("/customer/profile/address/:id", async (req, res) => { 
       const getId = req.params.id;
+      console.log(getId);
       const query = { _id: getId };
       
       const address = await addressCollection.findOne(query);
