@@ -11,7 +11,14 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+const corsOptions = {
+  origin: "https://rahmani.onrender.com", // replace with your React app's URL
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+};
 
+app.use("/customer/checkout", cors(corsOptions));
+app.use("/customer/profile/address/:id", cors(corsOptions));
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@cluster0.b6dwlgl.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
