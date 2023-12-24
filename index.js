@@ -39,7 +39,7 @@ async function run() {
           res.send(products)
       })
     
-    app.get("/customer/checkout", (req, res) => {
+    app.get("/customer/checkout", async(req, res) => {
       const data = {
         total_amount: 100,
         currency: "BDT",
@@ -70,10 +70,10 @@ async function run() {
         ship_postcode: 1000,
         ship_country: "Bangladesh",
       };
-      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
-      sslcz.init(data).then((apiResponse) => {
+      const sslcz = await new SSLCommerzPayment(store_id, store_passwd, is_live);
+      sslcz.init(data).then(async(apiResponse) => {
         // Redirect the user to payment gateway
-        let GatewayPageURL = apiResponse.GatewayPageURL;
+        let GatewayPageURL =await apiResponse.GatewayPageURL;
         res.send({ url: GatewayPageURL });
         console.log("Redirecting to: ", GatewayPageURL);
       });
