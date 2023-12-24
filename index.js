@@ -39,7 +39,7 @@ async function run() {
           res.send(products)
       })
     
-    app.get("/customer/checkout", (req, res) => {
+    app.get("/customer/checkout", async(req, res) => {
       const data = {
         total_amount: 100,
         currency: "BDT",
@@ -70,13 +70,18 @@ async function run() {
         ship_postcode: 1000,
         ship_country: "Bangladesh",
       };
-      const sslcz =  new SSLCommerzPayment(store_id, store_passwd, is_live);
-      sslcz.init(data).then(async(apiResponse) => {
-        // Redirect the user to payment gateway
-        let GatewayPageURL = apiResponse.GatewayPageURL;
-        res.send({ url: GatewayPageURL });
-        console.log("Redirecting to: ", GatewayPageURL);
-      });
+      const sslcz = new SSLCommerzPayment(store_id, store_passwd, is_live);
+
+  try {
+    const apiResponse = await sslcz.init(data);
+    let GatewayPageURL = apiResponse.GatewayPageURL;
+    res.send({ url: GatewayPageURL });
+    console.log("Redirecting to: ", GatewayPageURL);
+  } catch (error) {
+    console.error("Error initializing payment:", error);
+    res.status(500).send({ error: "Internal Server Error" });
+  }
+
     });
 
     app.post("/customer/profile/address/:id", async (req, res) => {
