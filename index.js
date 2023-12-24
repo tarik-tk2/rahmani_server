@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 const corsOptions = {
-  origin: "https://rahmani.onrender.com", // replace with your React app's URL
+  origin: "https://rahmani.onrender.com/", // replace with your React app's URL
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
