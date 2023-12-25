@@ -107,14 +107,12 @@ async function run() {
     })
     app.put("/user/:id", async (req, res) => { 
       const userID = req.params.id;
-      console.log(userID);
+      
        const filter = { _id:userID};
        const options = { upsert: true };
       
        const updateDoc = {
-         $set: {
-           plot: `A harvest of random numbers, such as`,
-         },
+         $set:req.body,
        };
        
        const result = await userCollection.updateOne(filter, updateDoc, options);
