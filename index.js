@@ -37,7 +37,9 @@ async function run() {
 
       const database =  client.db("rahmani_noor");
       const productCollection =  database.collection('products');
-      const addressCollection = database.collection("customer_address");
+    const addressCollection = database.collection("customer_address");
+    const profileCollection = database.collection("profile");
+    const userCollection = database.collection('user');
       app.get("/", (req, res) => {
         res.send("server is running ");
       });
@@ -90,7 +92,29 @@ async function run() {
   }
 
     });
-
+    app.get("/user/:id", async (req, res) => {
+      const userId = req.params.id;
+      const query={_id:userId}
+      const users = await userCollection.findOne(query);
+      res.send(users);
+    })
+    app.post("/user/:id", async (req, res) => {
+      const user = req.body;
+      const insertedData = await userCollection.insertOne(user);
+      res.send(insertedData);
+    })
+    app.put("/user/:id", async (req, res) => { 
+      const userID = req.params.id;
+      const filter = { _id: userID };
+      const options = { upsert: true };
+      const updateDoc = req.body;
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+    })
+    app.post('/customer/profile/profile/:id', async (req, res) => { 
+      const id = req.params.id;
+      const findId = await profileCollection.findOne({ _id: id });
+      console.log(findId);
+    })
     app.post("/customer/profile/address/:id", async (req, res) => {
       const reqBody = req.body;
       const result = await addressCollection.insertOne(reqBody);
