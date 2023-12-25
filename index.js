@@ -133,7 +133,7 @@ async function run() {
       const options = { upsert: true };
       const filter = { _id: getId }
       console.log(getId)
-      const updateDoc = req.body;
+      const updateDoc = { $set: req.body };
       const result = await addressCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
