@@ -94,21 +94,25 @@ async function run() {
     });
     app.get("/user/:id", async (req, res) => {
       const userId = req.params.id;
+      
       const query={_id:userId}
       const users = await userCollection.findOne(query);
       res.send(users);
     })
     app.post("/user/:id", async (req, res) => {
       const user = req.body;
+      console.log(user)
       const insertedData = await userCollection.insertOne(user);
       res.send(insertedData);
     })
     app.put("/user/:id", async (req, res) => { 
       const userID = req.params.id;
+      console.log(userID);
       const filter = { _id: userID };
       const options = { upsert: true };
       const updateDoc = req.body;
       const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result)
     })
     app.post('/customer/profile/profile/:id', async (req, res) => { 
       const id = req.params.id;
