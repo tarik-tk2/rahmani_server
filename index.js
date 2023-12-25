@@ -17,8 +17,7 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use("/customer/checkout", cors(corsOptions));
-app.use("/customer/profile/address/:id", cors(corsOptions));
+
 const uri = `mongodb+srv://${process.env.DB_NAME}:${process.env.DB_PASSWORD}@cluster0.b6dwlgl.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -139,6 +138,7 @@ async function run() {
       console.log(getId);
       const query = { _id: getId }; 
       const address = await addressCollection.findOne(query);
+      
       res.send(address);
     });
     
