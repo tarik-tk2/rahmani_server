@@ -92,6 +92,7 @@ async function run() {
   }
 
     });
+    //user
     app.get("/user/:id", async (req, res) => {
       const userId = req.params.id;
       
@@ -118,14 +119,10 @@ async function run() {
        const result = await userCollection.updateOne(filter, updateDoc, options);
       res.send(result)
     })
-    app.post('/customer/profile/profile/:id', async (req, res) => { 
-      const id = req.params.id;
-      const findId = await profileCollection.findOne({ _id: id });
-      console.log(findId);
-    })
+  //address
     app.post("/customer/profile/address/:id", async (req, res) => {
-      const reqBody = req.body;
-      const result = await addressCollection.insertOne(reqBody);
+      const userAddress = req.body;
+      const result = await addressCollection.insertOne(userAddress);
       res.send(result);
     });
     app.put("/customer/profile/address/:id", async (req, res) => {
@@ -133,17 +130,15 @@ async function run() {
       const options = { upsert: true };
       const filter = { _id: getId }
       console.log(getId)
-      const updateDoc = { $set: req.body };
+      const updateDoc ={ $set:req.body};
       const result = await addressCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
     app.get("/customer/profile/address/:id", async (req, res) => { 
       const getId = req.params.id;
       console.log(getId);
-      const query = { _id: getId };
-      
+      const query = { _id: getId }; 
       const address = await addressCollection.findOne(query);
-      console.log(address);
       res.send(address);
     });
     
