@@ -77,7 +77,7 @@ async function run() {
 
       if (result) {
         res.send({
-          url: `http://127.0.0.1:5173/customer/order/success/${trainId}`,
+          url: `https://rahamani-noor.web.app/customer/order/success/${trainId}`,
         });
       }
     });
@@ -148,7 +148,7 @@ async function run() {
       );
       if (result.modifiedCount > 0) {
         res.redirect(
-          `https://rahmani.onrender.com/customer/order/success/${req.params.trainId}`
+          `http://127.0.0.1:5173/customer/order/success/${req.params.trainId}`
         );
       }
     });
