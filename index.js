@@ -148,7 +148,7 @@ async function run() {
       );
       if (result.modifiedCount > 0) {
         res.redirect(
-          `http://127.0.0.1:5173/customer/order/success/${req.params.trainId}`
+          `https://rahmani.onrender.com/customer/order/success/${req.params.trainId}`
         );
       }
     });
