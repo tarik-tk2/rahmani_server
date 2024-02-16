@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 require("dotenv").config();
 const app = express();
@@ -12,6 +13,16 @@ const { ObjectId } = require("mongodb");
 
 app.use(cors());
 app.use(express.json());
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads"); // Define the destination folder for uploaded files
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname); // Keep the original filename
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const corsOptions = {
   origin: "https://rahmani.onrender.com/",
@@ -30,6 +41,7 @@ const client = new MongoClient(uri, {
   },
 });
 
+
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -42,6 +54,13 @@ async function run() {
     const userCollection = database.collection("user");
     const offerCollection = database.collection("offer");
     const orderCollection = database.collection("order");
+
+    app.post("/products", upload.single("media"), async (req, res) => {
+      const resultData = req.body;
+      const media = req.file ? req.file.path : null;
+      const products = await productCollection.insertOne(resultData);
+      res.send(products);
+    });
 
     app.get("/", (req, res) => {
       res.send("server is running ");
