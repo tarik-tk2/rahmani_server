@@ -13,12 +13,15 @@ const { ObjectId } = require("mongodb");
 
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads"); // Define the destination folder for uploaded files
+    cb(null, "uploads");
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname); // Keep the original filename
+    cb(null, file.originalname);
   },
 });
 
@@ -41,7 +44,6 @@ const client = new MongoClient(uri, {
   },
 });
 
-
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -55,16 +57,21 @@ async function run() {
     const offerCollection = database.collection("offer");
     const orderCollection = database.collection("order");
 
-    app.post("/products", upload.single("media"), async (req, res) => {
-      const resultData = req.body;
-      const media = req.file ? req.file.path : null;
-      const products = await productCollection.insertOne(resultData);
-      res.send(products);
-    });
-
     app.get("/", (req, res) => {
       res.send("server is running ");
     });
+
+    app.post("/products", upload.single("media"), async (req, res) => {
+      console.log(req.body);
+      const resultData = req.body;
+      const media = req.file ? req.file.path : null;
+      const products = await productCollection.insertOne({
+        ...resultData,
+        img: media,
+      });
+      res.send(products);
+    });
+    
     app.get("/products", async (req, res) => {
       const products = await productCollection.find().toArray();
       res.send(products);
@@ -188,7 +195,7 @@ async function run() {
       const requestedId = req.params.train_id;
 
       const filter = {
-        _id:new ObjectId (requestedId),
+        _id: new ObjectId(requestedId),
       };
       const options = {
         upsert: true,
@@ -197,7 +204,11 @@ async function run() {
         $set: req.body,
       };
 
-      const result = await orderCollection.updateOne(filter, updateDoc,options);
+      const result = await orderCollection.updateOne(
+        filter,
+        updateDoc,
+        options
+      );
       res.send(result);
     });
     //user
