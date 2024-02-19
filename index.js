@@ -131,6 +131,11 @@ async function run() {
         user_id: userId,
         delivered: false,
         order_status: true,
+        accepted: false,
+        processing: false,
+        packaging: false,
+        shipping: false,
+        delivered: false,
         timestamp: new Date().toISOString(),
       };
       const result = orderCollection.insertOne(finalOrder);
