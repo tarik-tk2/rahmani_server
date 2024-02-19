@@ -15,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static("uploads"));
+// const directory = path.join(__dirname, "utils/uploads");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -62,16 +63,49 @@ async function run() {
     });
 
     app.post("/products", upload.single("media"), async (req, res) => {
-      console.log(req.body);
-      const resultData = req.body;
-      const media = req.file ? req.file.path : null;
-      const products = await productCollection.insertOne({
-        ...resultData,
-        img: media,
-      });
-      res.send(products);
+      try {
+        const {
+          title,
+          description,
+          regularPrice,
+          taxRate,
+          promotionalPrice,
+          currency,
+          weight,
+          stock,
+          quantity,
+          category,
+          subCategory,
+          tags,
+        } = req.body;
+
+        // Handle file upload
+        const img = req.file.filename;
+
+        // Save product data to the database
+        const product = await productCollection.insertOne({
+          title,
+          description,
+          regularPrice,
+          taxRate,
+          promotionalPrice,
+          currency,
+          weight,
+          stock,
+          quantity,
+          category,
+          subCategory,
+          tags,
+          img, // Assuming "uploads" is your static directory
+        });
+
+        res.send(product);
+      } catch (error) {
+        console.error("Error adding product:", error);
+        res.status(500).send({ error: "Internal Server Error" });
+      }
     });
-    
+
     app.get("/products", async (req, res) => {
       const products = await productCollection.find().toArray();
       res.send(products);
@@ -203,13 +237,47 @@ async function run() {
       const updateDoc = {
         $set: req.body,
       };
-
       const result = await orderCollection.updateOne(
         filter,
         updateDoc,
         options
       );
       res.send(result);
+    });
+
+    // order accepted
+    app.put("/admin/order/:train_id", async (req, res) => {
+      try {
+        const requestedId = req.params.train_id;
+        const filter = {
+          trisection_id: requestedId,
+        };
+
+        const updateDoc = {
+          $set: {
+            order_status: true,
+          },
+        };
+
+        const result = await orderCollection.updateOne(filter, updateDoc);
+
+        if (result.modifiedCount === 1) {
+          res.send({
+            success: true,
+            message: "Order status updated successfully",
+          });
+        } else {
+          res.status(404).send({
+            success: false,
+            message: "Order not found or already updated",
+          });
+        }
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        res
+          .status(500)
+          .send({ success: false, error: "Internal Server Error" });
+      }
     });
     //user
     app.get("/user/:id", async (req, res) => {
