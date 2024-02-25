@@ -162,8 +162,7 @@ async function run() {
         packaging: false,
         shipping: false,
         delivered: false,
-        deliveredDate: null,
-        okMama:false,
+        deliveredDate: null,      
         timestamp: new Date().toISOString(),
       
       };
