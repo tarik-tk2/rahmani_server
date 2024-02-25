@@ -25,8 +25,8 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
-
-const upload = multer({ storage: storage });
+const upload = multer({ dest: "uploads/" });
+// const upload = multer({ storage: storage });
 
 const corsOptions = {
   origin: "https://rahmani.onrender.com/",
@@ -61,22 +61,18 @@ async function run() {
     app.get("/", (req, res) => {
       res.send("server is running ");
     });
-
+    //upload product
     app.post("/products", upload.single("media"), async (req, res) => {
       try {
         const {
           title,
           description,
           regularPrice,
-          taxRate,
           promotionalPrice,
           currency,
           weight,
           stock,
-          quantity,
           category,
-          subCategory,
-          tags,
         } = req.body;
 
         // Handle file upload
@@ -87,15 +83,11 @@ async function run() {
           title,
           description,
           regularPrice,
-          taxRate,
           promotionalPrice,
           currency,
           weight,
           stock,
-          quantity,
           category,
-          subCategory,
-          tags,
           img, // Assuming "uploads" is your static directory
         });
 
@@ -105,20 +97,54 @@ async function run() {
         res.status(500).send({ error: "Internal Server Error" });
       }
     });
-
+    //get single product
+    app.get("/product/:id", async (req, res) => {
+      const query = {
+        _id: new ObjectId(req.params.id),
+      };
+      const result = await productCollection.findOne(query);
+      res.send(result);
+    });
+    //get all products
     app.get("/products", async (req, res) => {
       const products = await productCollection.find().toArray();
       res.send(products);
     });
+    //get offer
     app.get("/offer", async (req, res) => {
       const offers = await offerCollection.find().toArray();
       res.send(offers);
     });
 
+    // order
     app.post("/customer/order/", async (req, res) => {
       const userOrder = req.body;
       console.log(userOrder);
     });
+    //singleOrder get
+    app.get("/customer/order/:uid/:tra_id", async (req, res) => {
+      try {
+        const uid = req.params.uid;
+        const query = {
+          user_id: uid,
+        };
+        const trans_id = req.params.tra_id;
+
+        const allOrderByUser = await orderCollection.find(query).toArray();
+        const findOrder = allOrderByUser.find(
+          (order) => parseInt(order.trisection_id) === parseInt(trans_id)
+        );
+
+        if (findOrder) {
+          res.status(200).json(" Order Found ");
+        } else {
+          res.status(400).json("Error!Order not found!");
+        }
+      } catch (error) {
+        res.status(500).json(" 500 Error ! Internal server Error occurrence. ");
+      }
+    });
+    // oreder checkout post
     app.post("/customer/checkout/cash/:uid", async (req, res) => {
       const trainId = new ObjectId().toString();
       const userId = req.params.uid;
@@ -136,7 +162,10 @@ async function run() {
         packaging: false,
         shipping: false,
         delivered: false,
+        deliveredDate: null,
+        okMama:false,
         timestamp: new Date().toISOString(),
+      
       };
       const result = orderCollection.insertOne(finalOrder);
 
@@ -146,7 +175,7 @@ async function run() {
         });
       }
     });
-
+    // ssl eccomerce post
     app.post("/customer/checkout", async (req, res) => {
       const trainId = new ObjectId().toString();
       const user_order = await req.body;
@@ -199,7 +228,7 @@ async function run() {
         res.status(500).send({ error: "Internal Server Error" });
       }
     });
-
+    // order success
     app.post("/customer/order/success/:trainId", async (req, res) => {
       const result = await orderCollection.updateOne(
         {
@@ -217,7 +246,7 @@ async function run() {
         );
       }
     });
-
+    // user base order track
     app.get("/customer/order/track/:uid", async (req, res) => {
       const userId = req.params.uid;
       const query = {
@@ -230,9 +259,9 @@ async function run() {
       res.send(allOrders);
     });
     // track cancellation
+
     app.put("/customer/order/track/:train_id", async (req, res) => {
       const requestedId = req.params.train_id;
-
       const filter = {
         _id: new ObjectId(requestedId),
       };
@@ -249,45 +278,117 @@ async function run() {
       );
       res.send(result);
     });
+    //all order
+    app.get("/admin/all/order", async (req, res) => {
+      const allOrder = await orderCollection
+        .find()
+        .sort({ timestamp: -1 })
+        .toArray();
+      res.send(allOrder);
+    });
 
     // order accepted
-    app.put("/admin/order/:train_id", async (req, res) => {
+    app.put("/admin/accept/:order_id", async (req, res) => {
       try {
-        const requestedId = req.params.train_id;
-        const filter = {
-          trisection_id: requestedId,
+        const requestedId = req.params.order_id; // Get the order ID from the URL params
+        const query = {
+          _id: new ObjectId(requestedId),
         };
 
-        const updateDoc = {
+        const update = {
           $set: {
-            order_status: true,
+            accepted: true, // Set accepted status to true
+            processing: true,
+            packaging: true,
           },
         };
 
-        const result = await orderCollection.updateOne(filter, updateDoc);
+        const result = await orderCollection.updateOne(query, update);
 
-        if (result.modifiedCount === 1) {
-          res.send({
-            success: true,
-            message: "Order status updated successfully",
-          });
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ message: "Order accepted successfully" });
         } else {
-          res.status(404).send({
-            success: false,
-            message: "Order not found or already updated",
-          });
+          res.status(404).json({ message: "Order not found" });
         }
       } catch (error) {
-        console.error("Error updating order status:", error);
-        res
-          .status(500)
-          .send({ success: false, error: "Internal Server Error" });
+        console.error("Error updating order:", error);
+        res.status(500).json({ message: "Internal server error" });
       }
     });
-    //user
+    // delivered and paid
+    app.put("/admin/delivered/:order_id", async (req, res) => {
+      try {
+        const requestedId = req.params.order_id; // Get the order ID from the URL params
+        const query = {
+          _id: new ObjectId(requestedId),
+        };
+
+        const update = {
+          $set: {
+            delivered: true, // Set de status to true
+            deliveredDate: new Date().toISOString(),
+          },
+        };
+
+        const result = await orderCollection.updateOne(query, update);
+
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ message: "Order accepted successfully" });
+        } else {
+          res.status(404).json({ message: "Order not found" });
+        }
+      } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
+    //paid 
+     app.put("/admin/paid/:order_id", async (req, res) => {
+       try {
+         const requestedId = req.params.order_id; // Get the order ID from the URL params
+         const query = {
+           _id: new ObjectId(requestedId),
+         };
+
+         const update = {
+           $set: {
+             paid_status: true, // Set paid status to true
+           },
+         };
+
+         const result = await orderCollection.updateOne(query, update);
+
+         if (result.modifiedCount > 0) {
+           res.status(200).json({ message: "Order accepted successfully" });
+         } else {
+           res.status(404).json({ message: "Order not found" });
+         }
+       } catch (error) {
+         console.error("Error updating order:", error);
+         res.status(500).json({ message: "Internal server error" });
+       }
+     });
+    //order delete by admin
+    app.delete("/admin/order/:order_id", async (req, res) => {
+      try {
+        const requestedId = req.params.order_id;
+        const query = {
+          _id: new ObjectId(requestedId),
+        };
+        const result = await orderCollection.deleteOne(query);
+        if (result.deletedCount === 1) {
+          res.status(200).json({ message: "successfully Deleted" });
+        } else {
+          res.status(400).json({ message: "Order not found" });
+        }
+      } catch (error) {
+        console.log("Error in Deleting", error);
+        res.status(500).json({ message: "Internal server is erroring" });
+      }
+    });
+
     app.get("/user/:id", async (req, res) => {
       const userId = req.params.id;
-
       const query = { _id: userId };
       const users = await userCollection.findOne(query);
       res.send(users);
