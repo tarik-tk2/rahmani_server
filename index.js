@@ -122,28 +122,28 @@ async function run() {
       console.log(userOrder);
     });
     //singleOrder get
-    app.get("/customer/order/:uid/:tra_id", async (req, res) => {
-      try {
-        const uid = req.params.uid;
-        const query = {
-          user_id: uid,
-        };
-        const trans_id = req.params.tra_id;
+    // app.get("/customer/order/:uid/:tra_id", async (req, res) => {
+    //   try {
+    //     const uid = req.params.uid;
+    //     const query = {
+    //       user_id: uid,
+    //     };
+    //     const trans_id = req.params.tra_id;
 
-        const allOrderByUser = await orderCollection.find(query).toArray();
-        const findOrder = allOrderByUser.find(
-          (order) => parseInt(order.trisection_id) === parseInt(trans_id)
-        );
+    //     const allOrderByUser = await orderCollection.find(query).toArray();
+    //     const findOrder = allOrderByUser.find(
+    //       (order) => parseInt(order.trisection_id) === parseInt(trans_id)
+    //     );
 
-        if (findOrder) {
-          res.status(200).json(" Order Found ");
-        } else {
-          res.status(400).json("Error!Order not found!");
-        }
-      } catch (error) {
-        res.status(500).json(" 500 Error ! Internal server Error occurrence. ");
-      }
-    });
+    //     if (findOrder) {
+    //       res.status(200).json(" Order Found ");
+    //     } else {
+    //       res.status(400).json("Error!Order not found!");
+    //     }
+    //   } catch (error) {
+    //     res.status(500).json(" 500 Error ! Internal server Error occurrence. ");
+    //   }
+    // });
     // oreder checkout post
     app.post("/customer/checkout/cash/:uid", async (req, res) => {
       const trainId = new ObjectId().toString();
@@ -247,8 +247,8 @@ async function run() {
     });
     // user base order track
     app.get("/customer/order/track/:uid", async (req, res) => {
+      console.log(req.params.uid)
       const userId = req.params.uid;
-      console.log(userId)
       const query = {
         user_id: userId,
       };
@@ -258,6 +258,7 @@ async function run() {
         .toArray();
       res.send(allOrders);
     });
+    
     // track cancellation
 
     app.put("/customer/order/track/:train_id", async (req, res) => {
