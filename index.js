@@ -162,7 +162,7 @@ async function run() {
         packaging: false,
         shipping: false,
         delivered: false,
-        deliveredDate: null,      
+        // deliveredDate: null,      
         timestamp: new Date().toISOString(),
       
       };
@@ -248,12 +248,13 @@ async function run() {
     // user base order track
     app.get("/customer/order/track/:uid", async (req, res) => {
       const userId = req.params.uid;
+      console.log(userId)
       const query = {
         user_id: userId,
       };
       const allOrders = await orderCollection
         .find(query)
-        .sort({ timestamp: -1 })
+        .sort({ timestamp:-1 })
         .toArray();
       res.send(allOrders);
     });
@@ -305,9 +306,9 @@ async function run() {
         const result = await orderCollection.updateOne(query, update);
 
         if (result.modifiedCount > 0) {
-          res.status(200).json({ message: "Order accepted successfully" });
+          res.status(200).json({ message: "Order accepted successfully " });
         } else {
-          res.status(404).json({ message: "Order not found" });
+          res.status(404).json({ message: "Order not found " });
         }
       } catch (error) {
         console.error("Error updating order:", error);
@@ -325,7 +326,7 @@ async function run() {
         const update = {
           $set: {
             delivered: true, // Set de status to true
-            deliveredDate: new Date().toISOString(),
+            // deliveredDate: new Date().toISOString(),
           },
         };
 
@@ -439,8 +440,7 @@ async function run() {
       res.send(address);
     });
   } finally {
-    // Ensures that the client will close when you finish/error
-    // await client.close();
+    
   }
 }
 run().catch(console.dir);
