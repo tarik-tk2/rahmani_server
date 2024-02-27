@@ -121,7 +121,7 @@ async function run() {
       const userOrder = req.body;
       console.log(userOrder);
     });
-    
+
     //singleOrder get
     // app.get("/customer/order/:uid/:tra_id", async (req, res) => {
     //   try {
@@ -327,8 +327,8 @@ async function run() {
 
         const update = {
           $set: {
-            delivered: true, // Set de status to true
-            // deliveredDate: new Date().toISOString(),
+             delivered: true, // Set de status to true
+             deliveredDate: new Date().toISOString(),
           },
         };
 
