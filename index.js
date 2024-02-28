@@ -328,7 +328,7 @@ async function run() {
         const update = {
           $set: {
             delivered: true, // Set de status to true
-            deliveredDate: new Date( Date.now()).toISOString(),
+            deliveredDate: new Date().toLocaleString(),
           },
         };
 
