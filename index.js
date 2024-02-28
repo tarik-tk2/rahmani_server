@@ -1,5 +1,6 @@
 const express = require("express");
-import moment from "moment";
+var moment = require("moment"); // require
+moment().format(); 
 const cors = require("cors");
 const multer = require("multer");
 const { MongoClient, ServerApiVersion } = require("mongodb");
