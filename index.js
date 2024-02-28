@@ -327,8 +327,8 @@ async function run() {
 
         const update = {
           $set: {
-             delivered: true, // Set de status to true
-             deliveredDate: new Date().toISOString(),
+            delivered: true, // Set de status to true
+            deliveredDate: new Date( Date.now()).toISOString(),
           },
         };
 
@@ -344,6 +344,7 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
+  
     //paid 
      app.put("/admin/paid/:order_id", async (req, res) => {
        try {
