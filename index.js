@@ -11,24 +11,13 @@ const store_id = process.env.STORE_ID;
 const store_passwd = process.env.STORE_PASSWORD;
 const is_live = false; //true for live, false for sandbox
 const port = process.env.PORT || 5000;
+const path = require("node:path");
 const { ObjectId } = require("mongodb");
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use("/uploads", express.static("uploads"));
-// const directory = path.join(__dirname, "utils/uploads");
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads");
-  },
-  filename: function (req, file, cb) {
-    cb(null, file.originalname);
-  },
-});
-const upload = multer({ dest: "uploads/" });
-// const upload = multer({ storage: storage });
 
 const corsOptions = {
   origin: "https://rahmani.onrender.com/",
@@ -60,45 +49,74 @@ async function run() {
     const offerCollection = database.collection("offer");
     const orderCollection = database.collection("order");
 
+
+    const storage = multer.diskStorage({
+      destination: function (req, file, cb) {
+        cb(null, "uploads/"); // Specify the destination directory
+      },
+      filename: function (req, file, cb) {
+        cb(null, file.originalname); // Keep the original filename
+      },
+    });
+    const upload = multer({ storage: storage });
+
     app.get("/", (req, res) => {
       res.send("server is running ");
     });
     //upload product
-    app.post("/products", upload.single("media"), async (req, res) => {
-      try {
-        const {
-          title,
-          description,
-          regularPrice,
-          promotionalPrice,
-          currency,
-          weight,
-          stock,
-          category,
-        } = req.body;
+  app.post("/products", upload.single("image"), async (req, res) => {
+    try {
+      const database = client.db("rahmani_noor");
+      const productCollection = database.collection("products");
 
-        // Handle file upload
-        const img = req.file.filename;
+      const {
+        title,
+        price,
+        promotionalPrice,
+        weight,
+        category,
+        description,
+        currency,
+        quantity,
+      } = req.body;
+      const imageUrl = req.file.path; // Get the path of the uploaded image
 
-        // Save product data to the database
-        const product = await productCollection.insertOne({
-          title,
-          description,
-          regularPrice,
-          promotionalPrice,
-          currency,
-          weight,
-          stock,
-          category,
-          img, // Assuming "uploads" is your static directory
-        });
-
-        res.send(product);
-      } catch (error) {
-        console.error("Error adding product:", error);
-        res.status(500).send({ error: "Internal Server Error" });
+      // Validate required fields
+      if (
+        !title ||
+        !price ||
+        !weight ||
+        !category ||
+        !description ||
+        !currency ||
+        !quantity ||
+        !imageUrl
+      ) {
+        return res.status(400).json({ error: "All fields are required" });
       }
-    });
+
+      // Insert product data into MongoDB
+      const result = await productCollection.insertOne({
+        title,
+        price,
+        promotionalPrice,
+        weight,
+        category,
+        description,
+        currency,
+        quantity,
+        imageUrl,
+      });
+
+      res.status(201).json({
+        message: "Product saved successfully",
+        productId: result.insertedId,
+      });
+    } catch (error) {
+      console.error("Error saving product:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
     //get single product
     app.get("/product/:id", async (req, res) => {
       const query = {
