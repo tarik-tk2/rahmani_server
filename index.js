@@ -1,6 +1,6 @@
 const express = require("express");
 var moment = require("moment"); // require
-moment().format(); 
+moment().format();
 const cors = require("cors");
 const multer = require("multer");
 const { MongoClient, ServerApiVersion } = require("mongodb");
@@ -17,7 +17,7 @@ const { ObjectId } = require("mongodb");
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const corsOptions = {
   origin: "https://rahmani.onrender.com/",
@@ -49,7 +49,6 @@ async function run() {
     const offerCollection = database.collection("offer");
     const orderCollection = database.collection("order");
 
-
     const storage = multer.diskStorage({
       destination: function (req, file, cb) {
         cb(null, "uploads/"); // Specify the destination directory
@@ -64,59 +63,63 @@ async function run() {
       res.send("server is running ");
     });
     //upload product
-  app.post("/products", upload.single("image"), async (req, res) => {
-    try {
-      const database = client.db("rahmani_noor");
-      const productCollection = database.collection("products");
+  //upload product
+app.post("/products", upload.array("images", 5), async (req, res) => {
+  try {
+    const {
+      title,
+      price,
+      promotionalPrice,
+      weight,
+      category,
+      description,
+      currency,
+      quantity,
+    } = req.body;
+    const images = req.files.map((file) => file.path); // Get the paths of the uploaded images
 
-      const {
-        title,
-        price,
-        promotionalPrice,
-        weight,
-        category,
-        description,
-        currency,
-        quantity,
-      } = req.body;
-      const imageUrl = req.file.path; // Get the path of the uploaded image
-
-      // Validate required fields
-      if (
-        !title ||
-        !price ||
-        !weight ||
-        !category ||
-        !description ||
-        !currency ||
-        !quantity ||
-        !imageUrl
-      ) {
-        return res.status(400).json({ error: "All fields are required" });
-      }
-
-      // Insert product data into MongoDB
-      const result = await productCollection.insertOne({
-        title,
-        price,
-        promotionalPrice,
-        weight,
-        category,
-        description,
-        currency,
-        quantity,
-        imageUrl,
-      });
-
-      res.status(201).json({
-        message: "Product saved successfully",
-        productId: result.insertedId,
-      });
-    } catch (error) {
-      console.error("Error saving product:", error);
-      res.status(500).json({ error: "Internal server error" });
+    // Validate required fields
+    if (
+      !title ||
+      !price ||
+      !weight ||
+      !category ||
+      !description ||
+      !currency ||
+      !quantity ||
+      !images.length // Check if images are uploaded
+    ) {
+      return res.status(400).json({ error: "All fields are required" });
     }
-  });
+
+    const ratings = 0;
+    const ratingsCount = 0;
+
+    // Insert product data into MongoDB
+    const result = await productCollection.insertOne({
+      title,
+      price,
+      promotionalPrice,
+      weight,
+      category,
+      description,
+      currency,
+      quantity,
+      images, // Save the array of image paths
+      ratings,
+      ratingsCount,
+    });
+
+    res.status(201).json({
+      message: "Product saved successfully",
+      productId: result.insertedId,
+    });
+  } catch (error) {
+    console.error("Error saving product:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
     //get single product
     app.get("/product/:id", async (req, res) => {
       const query = {
@@ -183,9 +186,8 @@ async function run() {
         packaging: false,
         shipping: false,
         delivered: false,
-        // deliveredDate: null,      
+        // deliveredDate: null,
         timestamp: new Date().toISOString(),
-      
       };
       const result = orderCollection.insertOne(finalOrder);
 
@@ -268,18 +270,18 @@ async function run() {
     });
     // user base order track
     app.get("/customer/order/track/:uid", async (req, res) => {
-      console.log(req.params.uid)
+      console.log(req.params.uid);
       const userId = req.params.uid;
       const query = {
         user_id: userId,
       };
       const allOrders = await orderCollection
         .find(query)
-        .sort({ timestamp:-1 })
+        .sort({ timestamp: -1 })
         .toArray();
       res.send(allOrders);
     });
-    
+
     // track cancellation
 
     app.put("/customer/order/track/:train_id", async (req, res) => {
@@ -366,33 +368,33 @@ async function run() {
         res.status(500).json({ message: "Internal server error" });
       }
     });
-  
-    //paid 
-     app.put("/admin/paid/:order_id", async (req, res) => {
-       try {
-         const requestedId = req.params.order_id; // Get the order ID from the URL params
-         const query = {
-           _id: new ObjectId(requestedId),
-         };
 
-         const update = {
-           $set: {
-             paid_status: true, // Set paid status to true
-           },
-         };
+    //paid
+    app.put("/admin/paid/:order_id", async (req, res) => {
+      try {
+        const requestedId = req.params.order_id; // Get the order ID from the URL params
+        const query = {
+          _id: new ObjectId(requestedId),
+        };
 
-         const result = await orderCollection.updateOne(query, update);
+        const update = {
+          $set: {
+            paid_status: true, // Set paid status to true
+          },
+        };
 
-         if (result.modifiedCount > 0) {
-           res.status(200).json({ message: "Order accepted successfully" });
-         } else {
-           res.status(404).json({ message: "Order not found" });
-         }
-       } catch (error) {
-         console.error("Error updating order:", error);
-         res.status(500).json({ message: "Internal server error" });
-       }
-     });
+        const result = await orderCollection.updateOne(query, update);
+
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ message: "Order accepted successfully" });
+        } else {
+          res.status(404).json({ message: "Order not found" });
+        }
+      } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
     //order delete by admin
     app.delete("/admin/order/:order_id", async (req, res) => {
       try {
@@ -465,7 +467,6 @@ async function run() {
       res.send(address);
     });
   } finally {
-    
   }
 }
 run().catch(console.dir);
