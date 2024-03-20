@@ -64,7 +64,8 @@ async function run() {
     });
     //upload product
   //upload product
-app.post("/products", upload.array("images", 5), async (req, res) => {
+    app.post("/products", upload.array("images", 5), async (req, res) => {
+  console.log(req.body)
   try {
     const {
       title,
@@ -395,6 +396,32 @@ app.post("/products", upload.array("images", 5), async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
       }
     });
+    //order shipped
+     app.put("/admin/shipping/:order_id", async (req, res) => {
+       try {
+         const requestedId = req.params.order_id; // Get the order ID from the URL params
+         const query = {
+           _id: new ObjectId(requestedId),
+         };
+
+         const update = {
+           $set: {
+             shipping: true, // Set paid status to true
+           },
+         };
+
+         const result = await orderCollection.updateOne(query, update);
+
+         if (result.modifiedCount > 0) {
+           res.status(200).json({ message: "shipping" });
+         } else {
+           res.status(404).json({ message: "shipping error " });
+         }
+       } catch (error) {
+         console.error("Error updating order:", error);
+         res.status(500).json({ message: "Internal server error" });
+       }
+     });
     //order delete by admin
     app.delete("/admin/order/:order_id", async (req, res) => {
       try {
