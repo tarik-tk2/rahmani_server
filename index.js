@@ -504,10 +504,7 @@ async function run() {
         const { rating, comment } = req.body;
 
         // Get the product associated with the order
-        const order = await db
-          .collection("order")
-          .findOne({ _id: ObjectId(orderId) });
-        const product = order.products[0]; // Assuming there's only one product in the order
+        console.log(orderId, rating, comment);
 
         // Update the product's ratings and comments
         const updatedRatings = product.ratings + rating;
