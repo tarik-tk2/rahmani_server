@@ -498,7 +498,7 @@ async function run() {
 
     // ratings
 
-    app.post("/customer/order/:orderId/ratings-comments", async (req, res) => {
+    app.post("/customer/order/ratings/:orderId", async (req, res) => {
       try {
         const orderId = req.params.orderId;
         const { rating, comment } = req.body;
