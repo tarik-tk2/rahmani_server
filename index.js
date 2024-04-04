@@ -493,6 +493,53 @@ async function run() {
 
       res.send(address);
     });
+
+
+
+    // ratings
+
+    app.post("/customer/order/:orderId/ratings-comments", async (req, res) => {
+      try {
+        const orderId = req.params.orderId;
+        const { rating, comment } = req.body;
+
+        // Get the product associated with the order
+        const order = await db
+          .collection("order")
+          .findOne({ _id: ObjectId(orderId) });
+        const product = order.products[0]; // Assuming there's only one product in the order
+
+        // Update the product's ratings and comments
+        const updatedRatings = product.ratings + rating;
+        const updatedRatingsCount = product.ratingsCount + 1;
+        const updatedAverageRating = updatedRatings / updatedRatingsCount;
+
+        // Update the product document in the database
+        const result = await db.collection("products").updateOne(
+          { _id: ObjectId(product._id) },
+          {
+            $set: {
+              ratings: updatedRatings,
+              ratingsCount: updatedRatingsCount,
+              averageRating: updatedAverageRating,
+              $push: { comments: comment }, // Add the comment to the comments array
+            },
+          }
+        );
+
+        if (result.modifiedCount > 0) {
+          res
+            .status(200)
+            .json({ message: "Rating and comments submitted successfully" });
+        } else {
+          res.status(404).json({ message: "Product not found" });
+        }
+      } catch (error) {
+        console.error("Error submitting rating and comments:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
+
   } finally {
   }
 }
