@@ -63,64 +63,63 @@ async function run() {
       res.send("server is running ");
     });
     //upload product
-  //upload product
+    //upload product
     app.post("/products", upload.array("images", 5), async (req, res) => {
-  console.log(req.body)
-  try {
-    const {
-      title,
-      price,
-      promotionalPrice,
-      weight,
-      category,
-      description,
-      currency,
-      quantity,
-    } = req.body;
-    const images = req.files.map((file) => file.path); // Get the paths of the uploaded images
+      console.log(req.body);
+      try {
+        const {
+          title,
+          price,
+          promotionalPrice,
+          weight,
+          category,
+          description,
+          currency,
+          quantity,
+        } = req.body;
+        const images = req.files.map((file) => file.path); // Get the paths of the uploaded images
 
-    // Validate required fields
-    if (
-      !title ||
-      !price ||
-      !weight ||
-      !category ||
-      !description ||
-      !currency ||
-      !quantity ||
-      !images.length // Check if images are uploaded
-    ) {
-      return res.status(400).json({ error: "All fields are required" });
-    }
+        // Validate required fields
+        if (
+          !title ||
+          !price ||
+          !weight ||
+          !category ||
+          !description ||
+          !currency ||
+          !quantity ||
+          !images.length // Check if images are uploaded
+        ) {
+          return res.status(400).json({ error: "All fields are required" });
+        }
 
-    const ratings = 0;
-    const ratingsCount = 0;
+        const ratings = 0;
+        const ratingsCount = 0;
 
-    // Insert product data into MongoDB
-    const result = await productCollection.insertOne({
-      title,
-      price,
-      promotionalPrice,
-      weight,
-      category,
-      description,
-      currency,
-      quantity,
-      images, // Save the array of image paths
-      ratings,
-      ratingsCount,
+        // Insert product data into MongoDB
+        const result = await productCollection.insertOne({
+          title,
+          price,
+          promotionalPrice,
+          weight,
+          category,
+          description,
+          currency,
+          quantity,
+          images, // Save the array of image paths
+          ratings,
+          ratingsCount,
+        });
+
+        res.status(201).json({
+          message: "Product saved successfully",
+          productId: result.insertedId,
+        });
+      } catch (error) {
+        console.error("Error saving product:", error);
+        res.status(500).json({ error: "Internal server error" });
+      }
     });
-
-    res.status(201).json({
-      message: "Product saved successfully",
-      productId: result.insertedId,
-    });
-  } catch (error) {
-    console.error("Error saving product:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
     //get single product
     app.get("/product/:id", async (req, res) => {
       const query = {
@@ -129,6 +128,8 @@ async function run() {
       const result = await productCollection.findOne(query);
       res.send(result);
     });
+    // update product ratings
+
     //get all products
     app.get("/products", async (req, res) => {
       const products = await productCollection.find().toArray();
@@ -282,6 +283,62 @@ async function run() {
         .toArray();
       res.send(allOrders);
     });
+    //track id wise product get
+    app.get("/customer/order/track/:train_id/:user_id", async (req, res) => {
+      const requestedId = req.params.train_id;
+    });
+    // post product comments and ratings
+    app.post("/customer/order/track/:train_id/:user_id", async (req, res) => {
+      const userId = req.params.user_id;
+      const requestedId = parseInt(req.params.train_id);
+      const { rating, comment } = req.body; // Assuming rating and comments are sent in the request body
+      // Find the order with the given trisection_id
+      
+      const query = { trisection_id: requestedId };
+      const order = await orderCollection.findOne(query);
+      // Check if the order exists
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Update each product in the order with ratings and comments
+      order.user_order.products.map(async (order) => {
+        const queryId = { _id: new ObjectId(order._id) };
+        const findProduct = await productCollection.findOne(queryId);
+
+        if (findProduct) {
+          // Assuming the ratings and comments are stored in the findProduct document
+          // Update ratings property
+          if (!findProduct.ratings) {
+            findProduct.ratings = [];
+          }
+          findProduct.ratings.push({
+            user: userId,
+            rating: rating,
+          });
+
+          // Update comments property
+          if (!findProduct.comments) {
+            findProduct.comments = [];
+          }
+          findProduct.comments.push({
+            user: userId,
+            comment: comment,
+          });
+
+          // Update the product document in the database
+          await productCollection.updateOne(queryId, {
+            $set: {
+              ratings: findProduct.ratings,
+              comments: findProduct.comments,
+            },
+          });
+        }
+      });
+
+      // Update the order in the database
+      res.status(200).json({ message: "successfully" });
+    });
 
     // track cancellation
 
@@ -397,31 +454,31 @@ async function run() {
       }
     });
     //order shipped
-     app.put("/admin/shipping/:order_id", async (req, res) => {
-       try {
-         const requestedId = req.params.order_id; // Get the order ID from the URL params
-         const query = {
-           _id: new ObjectId(requestedId),
-         };
+    app.put("/admin/shipping/:order_id", async (req, res) => {
+      try {
+        const requestedId = req.params.order_id; // Get the order ID from the URL params
+        const query = {
+          _id: new ObjectId(requestedId),
+        };
 
-         const update = {
-           $set: {
-             shipping: true, // Set paid status to true
-           },
-         };
+        const update = {
+          $set: {
+            shipping: true, // Set paid status to true
+          },
+        };
 
-         const result = await orderCollection.updateOne(query, update);
+        const result = await orderCollection.updateOne(query, update);
 
-         if (result.modifiedCount > 0) {
-           res.status(200).json({ message: "shipping" });
-         } else {
-           res.status(404).json({ message: "shipping error " });
-         }
-       } catch (error) {
-         console.error("Error updating order:", error);
-         res.status(500).json({ message: "Internal server error" });
-       }
-     });
+        if (result.modifiedCount > 0) {
+          res.status(200).json({ message: "shipping" });
+        } else {
+          res.status(404).json({ message: "shipping error " });
+        }
+      } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).json({ message: "Internal server error" });
+      }
+    });
     //order delete by admin
     app.delete("/admin/order/:order_id", async (req, res) => {
       try {
@@ -493,50 +550,7 @@ async function run() {
 
       res.send(address);
     });
-
-
-
     // ratings
-
-    app.post("/customer/order/ratings/:orderId", async (req, res) => {
-      try {
-        const orderId = req.params.orderId;
-        const { rating, comment } = req.body;
-
-        // Get the product associated with the order
-        console.log(orderId, rating, comment);
-
-        // Update the product's ratings and comments
-        const updatedRatings = product.ratings + rating;
-        const updatedRatingsCount = product.ratingsCount + 1;
-        const updatedAverageRating = updatedRatings / updatedRatingsCount;
-
-        // Update the product document in the database
-        const result = await db.collection("products").updateOne(
-          { _id: ObjectId(product._id) },
-          {
-            $set: {
-              ratings: updatedRatings,
-              ratingsCount: updatedRatingsCount,
-              averageRating: updatedAverageRating,
-              $push: { comments: comment }, // Add the comment to the comments array
-            },
-          }
-        );
-
-        if (result.modifiedCount > 0) {
-          res
-            .status(200)
-            .json({ message: "Rating and comments submitted successfully" });
-        } else {
-          res.status(404).json({ message: "Product not found" });
-        }
-      } catch (error) {
-        console.error("Error submitting rating and comments:", error);
-        res.status(500).json({ error: "Internal server error" });
-      }
-    });
-
   } finally {
   }
 }
