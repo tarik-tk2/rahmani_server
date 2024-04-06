@@ -289,61 +289,59 @@ async function run() {
       const requestedId = req.params.train_id;
     });
     // post product comments and ratings
- app.post("/customer/order/track/:train_id/:user_id", async (req, res) => {
-   const userId = req.params.user_id;
-   const requestedId = parseInt(req.params.train_id);
-   const { rating, comment } = req.body; // Assuming rating and comments are sent in the request body
-   // Find the order with the given trisection_id
+    app.post("/customer/order/track/:train_id/:user_id", async (req, res) => {
+      const userId = req.params.user_id;
+      const requestedId = parseInt(req.params.train_id);
+      const { rating, comment } = req.body; // Assuming rating and comments are sent in the request body
+      // Find the order with the given trisection_id
 
-   const query = { trisection_id: requestedId };
-   const order = await orderCollection.findOne(query);
-   // Check if the order exists
-   if (!order) {
-     return res.status(404).json({ error: "Order not found" });
-   }
+      const query = { trisection_id: requestedId };
+      const order = await orderCollection.findOne(query);
+      // Check if the order exists
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
 
-   // Update each product in the order with ratings and comments
-   order.user_order.products.map(async (orderProduct) => {
-     const queryId = { _id: new ObjectId(orderProduct._id) };
-     const findProduct = await productCollection.findOne(queryId);
+      // Update each product in the order with ratings and comments
+      order.user_order.products.map(async (orderProduct) => {
+        const queryId = { _id: new ObjectId(orderProduct._id) };
+        const findProduct = await productCollection.findOne(queryId);
 
-     if (findProduct) {
-       // Assuming the ratings and comments are stored in the findProduct document
-       // Update ratings property
-       if (!findProduct.ratings) {
-         findProduct.ratings = [];
-       }
-       findProduct.ratings.push({
-         user: userId,
-         rating: rating,
-       });
+        if (findProduct) {
+          // Assuming the ratings and comments are stored in the findProduct document
+          // Update ratings property
+          if (!findProduct.ratings) {
+            findProduct.ratings = [];
+          }
+          findProduct.ratings.push({
+            user: userId,
+            rating: rating,
+          });
 
-       // Update comments property
-       if (!findProduct.comments) {
-         findProduct.comments = [];
-       }
-       findProduct.comments.push({
-         user: userId,
-         comment: comment,
-       });
+          // Update comments property
+          if (!findProduct.comments) {
+            findProduct.comments = [];
+          }
+          findProduct.comments.push({
+            user: userId,
+            comment: comment,
+          });
 
-       // Update the product document in the database
-       await productCollection.updateOne(queryId, {
-         $set: {
-           ratings: findProduct.ratings,
-           comments: findProduct.comments,
-         },
-       });
-     }
-   });
+          // Update the product document in the database
+          await productCollection.updateOne(queryId, {
+            $set: {
+              ratings: findProduct.ratings,
+              comments: findProduct.comments,
+            },
+          });
+        }
+      });
 
-   // Update order.rating to true
-   await orderCollection.updateOne(query, { $set: { rating: true } });
+      // Update order.rating to true
+      await orderCollection.updateOne(query, { $set: { rating: true } });
 
-   res.status(200).json({ message: "successfully" });
- });
-
-
+      res.status(200).json({ message: "successfully" });
+    });
     // track cancellation
 
     app.put("/customer/order/track/:train_id", async (req, res) => {
