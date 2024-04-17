@@ -550,7 +550,7 @@ async function run() {
       const getId = req.params.id;
       console.log(getId);
       const query = { user_id: getId };
-      const address = await addressCollection.findOne(query);
+      const address = await addressCollection.find(query).toArray();
 
       res.send(address);
     });
