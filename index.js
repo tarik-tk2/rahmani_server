@@ -527,10 +527,12 @@ async function run() {
     });
     //address
     app.post("/customer/profile/address/:id", async (req, res) => {
+  
       const userAddress = req.body;
       const result = await addressCollection.insertOne(userAddress);
       res.send(result);
     });
+    
     app.put("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
       const options = { upsert: true };
