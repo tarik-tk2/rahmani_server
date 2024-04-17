@@ -536,7 +536,7 @@ async function run() {
     app.put("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
       const options = { upsert: true };
-      const filter = { _id: getId };
+      const filter = { user_id: getId };
       console.log(getId);
       const updateDoc = { $set: req.body };
       const result = await addressCollection.updateOne(
@@ -549,7 +549,7 @@ async function run() {
     app.get("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
       console.log(getId);
-      const query = { _id: getId };
+      const query = { user_id: getId };
       const address = await addressCollection.findOne(query);
 
       res.send(address);
