@@ -548,7 +548,8 @@ async function run() {
     });
     app.delete("/customer/profile/address/:id/:addressId", async (req, res) => {
       const getId = req.params.id;
-      const addressId = req.params.id;
+      const addressId = req.params.addressId;
+      console.log(addressId);
       const filter = { user_id: new ObjectId(addressId) };
       const result = await addressCollection.deleteOne(filter);
       res.send(result);
