@@ -533,8 +533,9 @@ async function run() {
       res.send(result);
     });
     
-    app.put("/customer/profile/address/:id", async (req, res) => {
+    app.put("/customer/profile/address/:id/:user_id", async (req, res) => {
       const getId = req.params.id;
+      console.log(req.params.user_id);
       const options = { upsert: true };
       const filter = { user_id: getId };
       console.log(getId);
