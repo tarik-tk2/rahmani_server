@@ -527,13 +527,12 @@ async function run() {
     });
     //address
     app.post("/customer/profile/address/:id", async (req, res) => {
-  
       const userAddress = req.body;
       const result = await addressCollection.insertOne(userAddress);
       res.send(result);
     });
-    
-    app.put("/customer/profile/address/:id/:user_id", async (req, res) => {
+
+    app.put("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
       console.log(req.params.user_id);
       const options = { upsert: true };
@@ -547,6 +546,14 @@ async function run() {
       );
       res.send(result);
     });
+    // app.get("/customer/profile/address/:id/:user_id", async (req, res) => {
+    //   const user_id = req.params.user_id;
+    //   console.log(user_id);
+    //   const query = { _id: new ObjectId(user_id) };
+    //   const address = await addressCollection.findOne(query);
+    //   res.send(address);
+    // });
+
     app.get("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
       console.log(getId);
