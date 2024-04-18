@@ -546,6 +546,12 @@ async function run() {
       );
       res.send(result);
     });
+    app.delete("/customer/profile/address/:id", async (req, res) => {
+      const getId = req.params.id;
+      const filter = { user_id: getId };
+      const result = await addressCollection.deleteOne(filter);
+      res.send(result);
+    });
     // app.get("/customer/profile/address/:id/:user_id", async (req, res) => {
     //   const user_id = req.params.user_id;
     //   console.log(user_id);
