@@ -547,13 +547,13 @@ async function run() {
       res.send(result);
     });
     app.delete("/customer/profile/address/:id/:addressId", async (req, res) => {
-      const getId = req.params.id;
+      const userId = req.params.id;
       const addressId = req.params.addressId;
-      console.log(addressId);
-      const filter = { user_id: new ObjectId(addressId) };
-      const result = await addressCollection.deleteOne(filter);
+      const query = { _id: new ObjectId(addressId), user_id: userId };
+      const result = await addressCollection.deleteOne(query);
       res.send(result);
     });
+
     // app.get("/customer/profile/address/:id/:user_id", async (req, res) => {
     //   const user_id = req.params.user_id;
     //   console.log(user_id);
