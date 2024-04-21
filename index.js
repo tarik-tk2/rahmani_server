@@ -289,14 +289,16 @@ async function run() {
     app.get("/customer/order/track/:train_id/:user_id", async (req, res) => {
       const requestedId = req.params.train_id;
     });
+
     // post product comments and ratings
+
     app.post("/customer/order/track/:train_id/:user_id", async (req, res) => {
       const userId = req.params.user_id;
       const transId = parseInt(req.params.train_id);
       const { rating, comment } = req.body; // Assuming rating and comments are sent in the request body
       // Find the order with the given trisection_id
      console.log(req.body)
-      const query = { trisection_id: transId };
+      const query = { trisection_id: parseInt(transId) };
       const order = await orderCollection.findOne(query);
       console.log(order);
       // Check if the order exists
@@ -317,7 +319,7 @@ async function run() {
                     findProduct.ratings = [];
                   }
                   findProduct.ratings.push({
-                    user: userId,
+                    user: order.user_order,fullName,
                     rating: rating,
                   });
 
@@ -326,7 +328,7 @@ async function run() {
                     findProduct.comments = [];
                   }
                   findProduct.comments.push({
-                    user: userId,
+                    user: order.user_order.fullName,
                     comment: comment,
                   });
 
@@ -349,6 +351,22 @@ async function run() {
       }
 
     });
+    
+    
+    // app.post("/customer/order/track/:tr_id/:user_id", async (req, res) => { 
+    //   const tr_id = req.params.tr_id;
+    //   const user_id = req.params.user_id; 
+    //   const { rating, comment } = req.body;
+    //   console.log(tr_id)
+    //   console.log(rating);
+    //   console.log(comment);
+    //   const query = { trisection_id: parseInt(tr_id) };
+    //   console.log(query)
+    //   const findOrder = await orderCollection.findOne(query);
+    //    console.log(findOrder)
+
+
+    // })
     // track cancellation
 
     app.put("/customer/order/track/:train_id", async (req, res) => {
