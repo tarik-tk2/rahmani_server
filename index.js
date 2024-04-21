@@ -48,6 +48,7 @@ async function run() {
     const userCollection = database.collection("user");
     const offerCollection = database.collection("offer");
     const orderCollection = database.collection("order");
+    const defaultAddress = database.collection("default_address");
 
     const storage = multer.diskStorage({
       destination: function (req, file, cb) {
@@ -291,56 +292,62 @@ async function run() {
     // post product comments and ratings
     app.post("/customer/order/track/:train_id/:user_id", async (req, res) => {
       const userId = req.params.user_id;
-      const requestedId = parseInt(req.params.train_id);
+      const transId = parseInt(req.params.train_id);
       const { rating, comment } = req.body; // Assuming rating and comments are sent in the request body
       // Find the order with the given trisection_id
-
-      const query = { trisection_id: requestedId };
+     console.log(req.body)
+      const query = { trisection_id: transId };
       const order = await orderCollection.findOne(query);
+      console.log(order);
       // Check if the order exists
       if (!order) {
-        return res.status(404).json({ error: "Order not found" });
-      }
+        return res.status(404).json({ error: "Product not found!" });
+      } 
 
       // Update each product in the order with ratings and comments
-      order.user_order.products.map(async (orderProduct) => {
-        const queryId = { _id: new ObjectId(orderProduct._id) };
-        const findProduct = await productCollection.findOne(queryId);
+      if (order) {
+              order.user_order.products.map(async (orderProduct) => {
+                const queryId = { _id: new ObjectId(orderProduct._id) };
+                const findProduct = await productCollection.findOne(queryId);
 
-        if (findProduct) {
-          // Assuming the ratings and comments are stored in the findProduct document
-          // Update ratings property
-          if (!findProduct.ratings) {
-            findProduct.ratings = [];
-          }
-          findProduct.ratings.push({
-            user: userId,
-            rating: rating,
-          });
+                if (findProduct) {
+                  // Assuming the ratings and comments are stored in the findProduct document
+                  // Update ratings property
+                  if (!findProduct.ratings) {
+                    findProduct.ratings = [];
+                  }
+                  findProduct.ratings.push({
+                    user: userId,
+                    rating: rating,
+                  });
 
-          // Update comments property
-          if (!findProduct.comments) {
-            findProduct.comments = [];
-          }
-          findProduct.comments.push({
-            user: userId,
-            comment: comment,
-          });
+                  // Update comments property
+                  if (!findProduct.comments) {
+                    findProduct.comments = [];
+                  }
+                  findProduct.comments.push({
+                    user: userId,
+                    comment: comment,
+                  });
 
-          // Update the product document in the database
-          await productCollection.updateOne(queryId, {
-            $set: {
-              ratings: findProduct.ratings,
-              comments: findProduct.comments,
-            },
-          });
-        }
-      });
+                  // Update the product document in the database
+                  await productCollection.updateOne(queryId, {
+                    $set: {
+                      ratings: findProduct.ratings,
+                      comments: findProduct.comments,
+                    },
+                  });
+                }
+              });
 
-      // Update order.rating to true
-      await orderCollection.updateOne(query, { $set: { rating: true } });
+              // Update order.rating to true
+              await orderCollection.updateOne(query, {
+                $set: { rating: true },
+              });
 
-      res.status(200).json({ message: "successfully" });
+              res.status(200).json({ message: "successfully" });
+      }
+
     });
     // track cancellation
 
@@ -553,14 +560,6 @@ async function run() {
       const result = await addressCollection.deleteOne(query);
       res.send(result);
     });
-
-    // app.get("/customer/profile/address/:id/:user_id", async (req, res) => {
-    //   const user_id = req.params.user_id;
-    //   console.log(user_id);
-    //   const query = { _id: new ObjectId(user_id) };
-    //   const address = await addressCollection.findOne(query);
-    //   res.send(address);
-    // });
 
     app.get("/customer/profile/address/:id", async (req, res) => {
       const getId = req.params.id;
