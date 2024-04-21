@@ -307,7 +307,7 @@ async function run() {
       } 
 
       // Update each product in the order with ratings and comments
-      if (order) {
+      
               order.user_order.products.map(async (orderProduct) => {
                 const queryId = { _id: new ObjectId(orderProduct._id) };
                 const findProduct = await productCollection.findOne(queryId);
@@ -319,7 +319,7 @@ async function run() {
                     findProduct.ratings = [];
                   }
                   findProduct.ratings.push({
-                    user: order.user_order,fullName,
+                    user: order.user_order.fullName,
                     rating: rating,
                   });
 
@@ -348,7 +348,7 @@ async function run() {
               });
 
               res.status(200).json({ message: "successfully" });
-      }
+      
 
     });
     
